@@ -180,6 +180,14 @@ print("Environment OK")
 EOF
 ```
 
+### Installing CodeFormer
+
+        ```
+        cd third_party/CodeFormer
+        python basicsr/setup.py develop
+        cd ../../
+        ```
+
 ---
 
 ## 🚀 Running The Pipeline
