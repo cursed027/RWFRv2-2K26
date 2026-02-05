@@ -264,6 +264,15 @@ Manual download is required ony for
   !gdown --id 1eUaSHG4pGlIZK7hBkqjyp2fc2epKoBvI
   ```
   - store this weight at pretrained/
+ 
+  -  change path in models/adaface.py :
+                    ```
+             # Load pretrained weights (exactly like inference.py)
+                ckpt = torch.load(
+                    "/media/admin1/DL/MILAN/3StageRWFR/repo/pretrained/adaface_ir50_ms1mv2.ckpt",
+                    map_location=device
+                )["state_dict"]
+            ```
 ---
 
 ## ⚠️ Important Notes
