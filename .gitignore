@@ -1,0 +1,73 @@
+# =============================
+# Python
+# =============================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# =============================
+# Virtual Environments
+# =============================
+env/
+venv/
+.venv/
+conda-env/
+ntire_face/
+
+# =============================
+# Weights / Models
+# =============================
+weights/
+pretrained/
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.bin
+
+# =============================
+# Torch / HF caches
+# =============================
+.cache/
+.huggingface/
+torch_cache/
+
+# =============================
+# Pipeline Outputs
+# =============================
+work/
+outputs/
+results/
+logs/
+experiments/
+
+# =============================
+# Diffusion temp outputs
+# =============================
+_tmp_*
+
+# =============================
+# Third-party build junk
+# =============================
+build/
+dist/
+*.egg-info/
+
+# =============================
+# Jupyter
+# =============================
+.ipynb_checkpoints
+
+# =============================
+# IDE
+# =============================
+.vscode/
+.idea/
+
+# =============================
+# OS junk
+# =============================
+.DS_Store
+Thumbs.db
