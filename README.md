@@ -136,8 +136,6 @@ Python 3.11+ will break dependencies.
 
 ### 1️⃣ Install PyTorch FIRST
 
-Example for CUDA 11.8:
-
 ```bash
 pip install torch==2.2.2+cu118 torchvision==0.15.2+cu118 \
 --extra-index-url https://download.pytorch.org/whl/cu118
