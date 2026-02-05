@@ -182,11 +182,11 @@ EOF
 
 ### Installing CodeFormer
 
-        ```
-        cd third_party/CodeFormer
-        python basicsr/setup.py develop
-        cd ../../
-        ```
+```
+cd third_party/CodeFormer
+python basicsr/setup.py develop
+cd ../../
+```
 
 ---
 
