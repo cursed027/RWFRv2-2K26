@@ -347,10 +347,282 @@ Training extensions are under development.
 
 ---
 
+# RWFR NTIRE Pipeline — Project Failure Postmortem
+
+## 🎯 Objective
+
+Build a **Top-3 competitive pipeline** for the NTIRE RWFR challenge using a **3-stage architecture**:
+
+1. **Stage-1 (Identity / Structure)**
+   StyleGAN2-ADA + pSp inversion
+2. **Stage-2 (Texture / Realism)**
+   DiffBIR (diffusion-based restoration)
+3. **Stage-3 (Naturalness / Harmonization)**
+   Low-strength diffusion refinement
+4. *(Planned)* Stage-4
+   Metric-aligned naturalness correction (noise prior)
+
+---
+
+## 🧠 Final Pipeline Design
+
+```text
+Input Image
+   ↓
+[Alignment (optional, gated)]
+   ↓
+IF alignment valid:
+    → Stage-1 (pSp)
+ELSE:
+    → Skip Stage-1
+   ↓
+Stage-2 (DiffBIR)
+   ↓
+Stage-3 (Low-strength refinement)
+   ↓
+Stage-4 (Noise harmonization - planned)
+   ↓
+Final Output
+```
+
+---
+
+## ⚠️ Key Challenges Faced
+
+### 1. Face Alignment Instability
+
+We attempted multiple alignment strategies using dlib 5-point landmarks:
+
+* Eye-angle based rotation (atan2)
+* Eye vs mouth vertical ordering
+* Nose vs eyes invariant
+* Combined heuristics
+
+#### Outcome:
+
+* Inconsistent results (≈50% incorrect rotations)
+* Flip-flop behavior due to conflicting logic
+* Sensitivity to degraded inputs (blur, children, profile)
+
+---
+
+### 2. Landmark Reliability Breakdown
+
+Root issue discovered:
+
+> dlib 5-point landmarks are **not reliable for orientation** on RWFR data
+
+Problems observed:
+
+* Eye order ambiguity
+* Nose drift in low-quality images
+* Mouth misplacement in children faces
+* Detector inconsistency across datasets (LFW, Wider, CelebA, etc.)
+
+#### Conclusion:
+
+No geometric heuristic can fix incorrect landmarks.
+
+---
+
+### 3. Over-Engineering Alignment
+
+Major mistake:
+
+> Treating alignment as a problem to “perfect”
+
+Symptoms:
+
+* Multiple competing orientation rules
+* Repeated redesign of logic
+* Increasing complexity without improving robustness
+
+#### Result:
+
+* System instability increased
+* Debugging complexity exploded
+* Time wasted on diminishing returns
+
+---
+
+### 4. Logical Conflict (Critical Bug)
+
+At one point, pipeline had:
+
+* Nose-based rotation
+* AND angle-based rotation
+
+This caused:
+
+* Double rotations
+* Cancellation effects
+* 50/50 output inconsistency
+
+---
+
+### 5. Misguided Fix Attempts
+
+Rejected approaches:
+
+* ❌ “Rotate everything 180° at end”
+  → Guarantees ~50% failure
+
+* ❌ More heuristic stacking
+  → Amplifies noise in bad landmarks
+
+* ❌ Perfect alignment goal
+  → Not achievable with given tools
+
+---
+
+## ✅ Key Realizations (Turning Points)
+
+### 🔑 1. Alignment is not mandatory
+
+> Alignment is an **optimization**, not a requirement
+
+* pSp benefits from alignment
+* DiffBIR does NOT require alignment
+
+---
+
+### 🔑 2. Landmark failure is unavoidable
+
+> Bad landmarks cannot be fixed downstream
+
+Therefore:
+
+* Stop trying to correct them
+* Detect and bypass instead
+
+---
+
+### 🔑 3. Robust systems use fallback paths
+
+> Strong pipelines handle failure, not eliminate it
+
+---
+
+## 🛠️ Final Solution Strategy
+
+### ✅ Simplified Alignment
+
+* Only perform:
+
+  * Face-centered crop
+  * Optional 180° correction (basic check)
+* No angle-based rotation
+* No overfitting heuristics
+
+---
+
+### ✅ Add Fallback Mechanism
+
+```python
+if alignment_valid:
+    output = Stage1_pSp(image)
+else:
+    output = image  # bypass Stage-1
+
+output = Stage2_DiffBIR(output)
+output = Stage3_refinement(output)
+```
+
+---
+
+### ✅ Define “Alignment Validity” (Practical Checks)
+
+Use simple rules:
+
+* Face detected
+* Landmarks present
+* Face size above threshold
+* No extreme distortion
+
+No complex geometry checks.
+
+---
+
+## 📊 Observed Metrics (Alignment Stage)
+
+* Total test images: 100
+* Successfully aligned: ~94
+* Skipped (no face / bad landmarks): ~6
+
+### Interpretation:
+
+* ~6% failure rate is **acceptable**
+* NTIRE pipelines tolerate such cases via fallback
+
+---
+
+## ❌ Mistakes Summary
+
+| Category    | Mistake                                        |
+| ----------- | ---------------------------------------------- |
+| Design      | Treated alignment as mandatory                 |
+| Logic       | Used multiple conflicting rotation rules       |
+| Assumption  | Trusted landmark accuracy blindly              |
+| Strategy    | Tried to “fix” bad data instead of bypassing   |
+| Engineering | Over-complicated simple stage                  |
+| Time        | Spent too long optimizing low-impact component |
+
+---
+
+## ✅ Correct Engineering Principles Learned
+
+* Use **minimal necessary transformations**
+* Avoid stacking heuristics on noisy signals
+* Prefer **fallback over forced correction**
+* Separate:
+
+  * *core pipeline*
+  * *failure handling*
+* Optimize where it matters (Stages 2 & 3)
+
+---
+
+## 🚀 Current Status
+
+### ✔ Completed
+
+* Alignment pipeline (stable enough)
+* Failure understanding
+* Strategy correction
+
+### 🔄 Next Steps
+
+1. Implement **pSp inference (Stage-1)**
+2. Integrate fallback routing
+3. Validate identity preservation
+4. Move to DiffBIR integration
+
+---
+
+## 🧾 Final Verdict
+
+This phase revealed a critical insight:
+
+> The bottleneck is not model performance — it is **pipeline robustness**.
+
+By shifting from:
+
+* “fix everything” → to → “handle failures gracefully”
+
+the system becomes:
+
+* stable
+* scalable
+* competition-ready
+
+---
+
+## 🧠 One-line takeaway
+
+> **Do not fight bad data — route around it.**
+
 # 📬 Contact
 
 Author: Milan Kumar Singh
 
 ---
-
-
